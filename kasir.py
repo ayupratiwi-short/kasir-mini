@@ -4,9 +4,9 @@ import os
 from datetime import datetime
 import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="Kasir Ayu 💖", layout="centered")
+st.set_page_config(page_title="Kasir Mini Solo 💖", layout="centered")
 
-st.title("🛍️ Kasir Ayu 💖")
+st.title("🛍️ Kasir Mini 💖")
 
 # =============================
 # FILE PRODUK
@@ -126,3 +126,4 @@ if os.path.exists("transaksi.csv"):
         st.write("Belum ada transaksi.")
 else:
     st.write("Belum ada transaksi.")
+
