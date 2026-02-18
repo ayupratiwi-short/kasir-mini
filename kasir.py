@@ -42,6 +42,27 @@ if menu == "Tambah Produk":
             data.to_csv("produk.csv", index=False)
 
         st.success("Produk berhasil ditambahkan 💗")
+    st.subheader("🗑️ Hapus Produk")
+
+if os.path.exists("produk.csv"):
+    data_produk = pd.read_csv("produk.csv")
+
+    if not data_produk.empty:
+        pilih_produk = st.selectbox(
+            "Pilih produk yang ingin dihapus",
+            data_produk["Nama"]
+        )
+
+        if st.button("Hapus Produk ❌"):
+            data_produk = data_produk[data_produk["Nama"] != pilih_produk]
+            data_produk.to_csv("produk.csv", index=False)
+            st.success("Produk berhasil dihapus 💗")
+            st.rerun()
+    else:
+        st.write("Belum ada produk.")
+else:
+    st.write("File produk belum ada.")
+
 
 # =======================
 # KASIR
@@ -163,6 +184,7 @@ elif menu == "Kasir":
 
     else:
         st.warning("Belum ada produk 💗 Tambahkan dulu ya.")
+
 
 
 
