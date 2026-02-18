@@ -97,4 +97,32 @@ if st.session_state.keranjang:
 # =============================
 # LAPORAN HARI INI
 # =============================
-st.
+st.subheader("📊 Penjualan Hari Ini")
+
+if os.path.exists("transaksi.csv"):
+    data = pd.read_csv("transaksi.csv")
+
+    if not data.empty:
+        data["Tanggal"] = pd.to_datetime(data["Tanggal"])
+        hari_ini = datetime.now().date()
+
+        data_hari_ini = data[data["Tanggal"].dt.date == hari_ini].copy()
+
+        if not data_hari_ini.empty:
+            data_hari_ini["Jam"] = data_hari_ini["Tanggal"].dt.strftime("%H:%M")
+
+            st.dataframe(data_hari_ini[["Tanggal", "Total"]])
+
+            fig, ax = plt.subplots()
+            ax.plot(data_hari_ini["Jam"], data_hari_ini["Total"])
+            ax.set_xlabel("Jam")
+            ax.set_ylabel("Total")
+            ax.set_title("Grafik Penjualan Hari Ini")
+
+            st.pyplot(fig)
+        else:
+            st.write("Belum ada transaksi hari ini.")
+    else:
+        st.write("Belum ada transaksi.")
+else:
+    st.write("Belum ada transaksi.")
