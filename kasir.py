@@ -14,7 +14,7 @@ h1, h2, h3 {color: #ff3399;}
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🛒💗 Kasir Cantik Ayu 💗")
+st.title("🛒💗 Kasir Mini 💗")
 
 menu = st.sidebar.selectbox("Menu", ["Kasir", "Tambah Produk"])
 
@@ -163,5 +163,6 @@ elif menu == "Kasir":
 
     else:
         st.warning("Belum ada produk 💗 Tambahkan dulu ya.")
+
 
 
