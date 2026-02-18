@@ -2,273 +2,180 @@ import streamlit as st
 import pandas as pd
 import os
 from datetime import datetime
+import uuid
 
-st.set_page_config(page_title="Kasir Mini Solo 💖", layout="centered")
+st.set_page_config(page_title="Kasir Mini Pink 💗", layout="wide")
 
-st.title("🛍️ Kasir Mini 💖")
+# ===============================
+# STYLE PINK
+# ===============================
+st.markdown("""
+    <style>
+    .stApp {
+        background-color: #ffe6f2;
+    }
+    h1, h2, h3 {
+        color: #d63384;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-# =============================
-# BUAT FILE PRODUK
-# =============================
+# ===============================
+# BUAT FILE JIKA BELUM ADA
+# ===============================
 if not os.path.exists("produk.csv"):
     pd.DataFrame(columns=["Nama", "Harga"]).to_csv("produk.csv", index=False)
 
-df_produk = pd.read_csv("produk.csv")
-
-# =============================
-# BUAT FILE TRANSAKSI
-# =============================
 if not os.path.exists("transaksi.csv"):
     pd.DataFrame(columns=[
-        "ID", "Tanggal", "Hari", "Jam",
-        "Nama", "Harga", "Jumlah",
-        "Total", "Status"
+        "ID","Tanggal","Hari","Jam",
+        "Nama","Harga","Jumlah","Total","Status"
     ]).to_csv("transaksi.csv", index=False)
 
-# =============================
-# TABS
-# =============================
-tab1, tab2 = st.tabs(["📦 Manajemen Produk", "🛒 Kasir & Laporan"])
+produk = pd.read_csv("produk.csv")
+transaksi = pd.read_csv("transaksi.csv")
+
+# ===============================
+# PERBAIKI FILE LAMA (ANTI ERROR)
+# ===============================
+kolom_wajib = ["ID","Tanggal","Hari","Jam","Nama","Harga","Jumlah","Total","Status"]
+
+for kolom in kolom_wajib:
+    if kolom not in transaksi.columns:
+        transaksi[kolom] = ""
+
+transaksi.to_csv("transaksi.csv", index=False)
+
+# ===============================
+# TAB
+# ===============================
+tab1, tab2, tab3 = st.tabs(["🛍 Kelola Produk", "💳 Kasir", "📊 Laporan"])
 
 # =====================================================
-# TAB 1 - MANAJEMEN PRODUK
+# TAB 1 PRODUK
 # =====================================================
 with tab1:
+    st.header("Tambah Produk")
 
-    st.subheader("📋 Daftar Produk")
-    if not df_produk.empty:
-        st.dataframe(df_produk)
-    else:
-        st.info("Belum ada produk.")
-
-    st.subheader("➕ Tambah Produk")
-    nama_baru = st.text_input("Nama Produk")
-    harga_baru = st.number_input("Harga", min_value=0)
+    nama = st.text_input("Nama Produk")
+    harga = st.number_input("Harga", min_value=0)
 
     if st.button("Tambah Produk"):
-        if nama_baru != "":
-            df_produk.loc[len(df_produk)] = [nama_baru, harga_baru]
-            df_produk.to_csv("produk.csv", index=False)
-            st.success("Produk berhasil ditambahkan 💖")
-            st.rerun()
+        if nama != "":
+            produk_baru = pd.DataFrame([[nama, harga]], columns=["Nama","Harga"])
+            produk = pd.concat([produk, produk_baru], ignore_index=True)
+            produk.to_csv("produk.csv", index=False)
+            st.success("Produk berhasil ditambahkan 💗")
 
-    st.subheader("🗑️ Hapus Produk")
-    if not df_produk.empty:
-        pilih_produk = st.selectbox("Pilih produk", df_produk["Nama"])
+    st.subheader("Daftar Produk")
 
-        if st.button("Hapus Produk ❌"):
-            df_produk = df_produk[df_produk["Nama"] != pilih_produk]
-            df_produk.to_csv("produk.csv", index=False)
-            st.success("Produk berhasil dihapus 💖")
-            st.rerun()
+    if not produk.empty:
+        st.dataframe(produk)
+
+        hapus_produk = st.selectbox("Pilih produk untuk dihapus", produk["Nama"])
+        if st.button("Hapus Produk"):
+            produk = produk[produk["Nama"] != hapus_produk]
+            produk.to_csv("produk.csv", index=False)
+            st.success("Produk dihapus ✨")
 
 # =====================================================
-# TAB 2 - KASIR & LAPORAN
+# TAB 2 KASIR
 # =====================================================
 with tab2:
-
-    st.subheader("🛒 Kasir")
+    st.header("Kasir")
 
     if "keranjang" not in st.session_state:
         st.session_state.keranjang = []
 
-    if not df_produk.empty:
-        produk_pilih = st.selectbox("Pilih Produk", df_produk["Nama"])
-        jumlah = st.number_input("Jumlah", min_value=1, step=1)
+    if not produk.empty:
+        pilih_produk = st.selectbox("Pilih Produk", produk["Nama"])
+        jumlah = st.number_input("Jumlah", min_value=1, value=1)
 
         if st.button("Tambah ke Keranjang"):
-            harga = df_produk[df_produk["Nama"] == produk_pilih]["Harga"].values[0]
-            total = harga * jumlah
-
+            harga = produk[produk["Nama"] == pilih_produk]["Harga"].values[0]
             st.session_state.keranjang.append({
-                "Nama": produk_pilih,
+                "Nama": pilih_produk,
                 "Harga": harga,
                 "Jumlah": jumlah,
-                "Total": total
+                "Total": harga * jumlah
             })
 
-            st.success("Ditambahkan ke keranjang 💖")
+    st.subheader("Keranjang")
 
-    # =============================
-    # TAMPILKAN KERANJANG
-    # =============================
     if st.session_state.keranjang:
         df_keranjang = pd.DataFrame(st.session_state.keranjang)
         st.dataframe(df_keranjang)
 
         total_bayar = df_keranjang["Total"].sum()
-        st.write(f"### 💰 Total Bayar: Rp {total_bayar}")
+        st.subheader(f"Total: Rp {total_bayar}")
 
-        if st.button("Bayar Sekarang 💖"):
-
+        if st.button("Proses Bayar 💰"):
             now = datetime.now()
+            id_transaksi = str(uuid.uuid4())[:8]
+            hari_indo = now.strftime("%A")
 
-            tanggal = now.strftime("%Y-%m-%d")
-
-            hari_inggris = now.strftime("%A")
-            translate_hari = {
-                "Monday": "Senin",
-                "Tuesday": "Selasa",
-                "Wednesday": "Rabu",
-                "Thursday": "Kamis",
-                "Friday": "Jumat",
-                "Saturday": "Sabtu",
-                "Sunday": "Minggu"
+            hari_dict = {
+                "Monday":"Senin","Tuesday":"Selasa","Wednesday":"Rabu",
+                "Thursday":"Kamis","Friday":"Jumat","Saturday":"Sabtu","Sunday":"Minggu"
             }
-            hari = translate_hari[hari_inggris]
 
-            jam = now.strftime("%H:%M:%S")
-            transaksi_id = now.strftime("%Y%m%d%H%M%S")
-
-            data_list = []
+            hari_indo = hari_dict.get(hari_indo, hari_indo)
 
             for item in st.session_state.keranjang:
-                data_list.append({
-                    "ID": transaksi_id,
-                    "Tanggal": tanggal,
-                    "Hari": hari,
-                    "Jam": jam,
-                    "Nama": item["Nama"],
-                    "Harga": item["Harga"],
-                    "Jumlah": item["Jumlah"],
-                    "Total": item["Total"],
-                    "Status": "Berhasil"
-                })
+                data_baru = pd.DataFrame([[
+                    id_transaksi,
+                    now.strftime("%Y-%m-%d"),
+                    hari_indo,
+                    now.strftime("%H:%M:%S"),
+                    item["Nama"],
+                    item["Harga"],
+                    item["Jumlah"],
+                    item["Total"],
+                    "Berhasil"
+                ]], columns=kolom_wajib)
 
-            data_baru = pd.DataFrame(data_list)
-            data_lama = pd.read_csv("transaksi.csv")
-            data_gabung = pd.concat([data_lama, data_baru])
+                transaksi = pd.concat([transaksi, data_baru], ignore_index=True)
 
-            data_gabung.to_csv("transaksi.csv", index=False)
-
-            st.success("Transaksi berhasil 💖")
+            transaksi.to_csv("transaksi.csv", index=False)
             st.session_state.keranjang = []
-            st.rerun()
+            st.success("Pembayaran Berhasil 💗")
 
-    # =============================
-    # LAPORAN PER HARI
-    # =============================
-    st.subheader("📊 Laporan Penjualan Per Hari")
+# =====================================================
+# TAB 3 LAPORAN
+# =====================================================
+with tab3:
+    st.header("Laporan Penjualan")
 
-    data = pd.read_csv("transaksi.csv")
-    # Perbaiki jika file versi lama belum ada kolom Status
-    if "Status" not in data.columns:
-        
-        data["Status"] = "Berhasil"
-        data.to_csv("transaksi.csv", index=False)
+    if not transaksi.empty:
 
-
-    if not data.empty:
-
-        data["Tanggal"] = pd.to_datetime(data["Tanggal"])
-        daftar_tanggal = sorted(data["Tanggal"].dt.date.unique())
-
-        pilih_tanggal = st.date_input(
-            "Pilih Tanggal",
-            value=daftar_tanggal[-1]
-        )
-
-        data_filter = data[data["Tanggal"].dt.date == pilih_tanggal]
-
-        if not data_filter.empty:
-
-            st.dataframe(data_filter)
-
-            data_berhasil = data_filter[data_filter["Status"] == "Berhasil"]
-            total_harian = data_berhasil["Total"].sum()
-
-            st.write(f"### 💰 Total Penjualan Hari Ini: Rp {total_harian}")
-
-            # VOID
-            st.subheader("🚨 Batalkan Transaksi")
-
-            daftar_id = data_filter[data_filter["Status"] == "Berhasil"]["ID"].unique()
-
-            if len(daftar_id) > 0:
-                pilih_id = st.selectbox("Pilih ID Transaksi", daftar_id)
-
-                if st.button("Batalkan Transaksi ❌"):
-                    data.loc[data["ID"] == pilih_id, "Status"] = "Void"
-                    data.to_csv("transaksi.csv", index=False)
-                    st.success("Transaksi berhasil dibatalkan 💖")
-                    st.rerun()
-            else:
-                st.info("Tidak ada transaksi aktif.")
-
-            # DOWNLOAD EXCEL
-            st.subheader("📥 Download Laporan")
-
-            file_excel = f"laporan_{pilih_tanggal}.xlsx"
-            data_filter.to_excel(file_excel, index=False)
-
-            with open(file_excel, "rb") as file:
-                st.download_button(
-                    label="Download Excel 💖",
-                    data=file,
-                    file_name=f"Laporan_{pilih_tanggal}.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-
-        else:
-            st.info("Tidak ada transaksi di tanggal ini.")
-    else:
-        st.info("Belum ada transaksi.")
-
-    # =============================
-    # LAPORAN BULANAN
-    # =============================
-    st.subheader("📅 Laporan Penjualan Bulanan")
-
-    if not data.empty:
-
-        # Pastikan kolom tanggal dalam format datetime
-        data["Tanggal"] = pd.to_datetime(data["Tanggal"])
-
-        # Tambahkan kolom Bulan & Tahun
-        data["Bulan"] = data["Tanggal"].dt.month
-        data["Tahun"] = data["Tanggal"].dt.year
-
-        daftar_bulan = sorted(data["Bulan"].unique())
-        daftar_tahun = sorted(data["Tahun"].unique())
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            pilih_bulan = st.selectbox("Pilih Bulan", daftar_bulan)
-
-        with col2:
-            pilih_tahun = st.selectbox("Pilih Tahun", daftar_tahun)
-
-        data_bulan = data[
-            (data["Bulan"] == pilih_bulan) &
-            (data["Tahun"] == pilih_tahun)
+        tanggal_pilih = st.selectbox("Pilih Tanggal", transaksi["Tanggal"].unique())
+        data_hari = transaksi[
+            (transaksi["Tanggal"] == tanggal_pilih) &
+            (transaksi["Status"] == "Berhasil")
         ]
 
-        if not data_bulan.empty:
+        st.subheader("Detail Transaksi")
+        st.dataframe(data_hari)
 
-            st.dataframe(data_bulan)
+        total_harian = data_hari["Total"].sum()
+        st.subheader(f"Total Harian: Rp {total_harian}")
 
-            data_berhasil_bulan = data_bulan[data_bulan["Status"] == "Berhasil"]
-            total_bulanan = data_berhasil_bulan["Total"].sum()
+        # TOTAL BULANAN
+        transaksi["Bulan"] = pd.to_datetime(transaksi["Tanggal"]).dt.to_period("M")
+        bulan_pilih = st.selectbox("Pilih Bulan", transaksi["Bulan"].astype(str).unique())
 
-            st.write(f"### 💰 Total Penjualan Bulan Ini: Rp {total_bulanan}")
+        data_bulan = transaksi[
+            (transaksi["Bulan"].astype(str) == bulan_pilih) &
+            (transaksi["Status"] == "Berhasil")
+        ]
 
-            # Download bulanan
-            file_excel_bulan = f"laporan_{pilih_bulan}_{pilih_tahun}.xlsx"
-            data_bulan.to_excel(file_excel_bulan, index=False)
+        total_bulanan = data_bulan["Total"].sum()
+        st.subheader(f"Total Bulanan: Rp {total_bulanan}")
 
-            with open(file_excel_bulan, "rb") as file:
-                st.download_button(
-                    label="Download Laporan Bulanan 💖",
-                    data=file,
-                    file_name=f"Laporan_{pilih_bulan}_{pilih_tahun}.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-
-        else:
-            st.info("Tidak ada transaksi di bulan ini.")
-
-
-
-
-
+        # DOWNLOAD EXCEL
+        st.download_button(
+            "Download Laporan Excel 📥",
+            data_hari.to_csv(index=False),
+            file_name="laporan_harian.csv",
+            mime="text/csv"
+        )
