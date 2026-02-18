@@ -3,9 +3,9 @@ import pandas as pd
 import os
 from datetime import datetime
 
-st.set_page_config(page_title="Kasir Ayu 💖", layout="centered")
+st.set_page_config(page_title="Kasir Mini Solo 💖", layout="centered")
 
-st.title("🛍️ Kasir Ayu 💖")
+st.title("🛍️ Kasir Mini 💖")
 
 # =============================
 # BUAT FILE PRODUK JIKA BELUM ADA
@@ -131,3 +131,4 @@ with tab2:
         st.dataframe(data)
     else:
         st.info("Belum ada transaksi.")
+
