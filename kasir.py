@@ -151,6 +151,12 @@ with tab2:
     st.subheader("📊 Laporan Penjualan Per Hari")
 
     data = pd.read_csv("transaksi.csv")
+    # Perbaiki jika file versi lama belum ada kolom Status
+    if "Status" not in data.columns:
+        
+        data["Status"] = "Berhasil"
+        data.to_csv("transaksi.csv", index=False)
+
 
     if not data.empty:
 
@@ -261,6 +267,7 @@ with tab2:
 
         else:
             st.info("Tidak ada transaksi di bulan ini.")
+
 
 
 
